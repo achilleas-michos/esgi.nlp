@@ -30,51 +30,34 @@ def embeddings_test(self):
     print(self.word_embeddings.most_similar(positive=['athens', 'france'], negative=['paris'], topn=1))
 
 
-def plot_sequence_length_distribution(docs):
-    bins = np.linspace(0, 100, 5)
-    plt.figure()
-    plt.hist([len(doc.get_sentence_tokens()) for doc in docs], bins=bins)
-    plt.title('CONLL-NER-2002')
-    plt.xlabel('Sequence Length')
-    plt.ylabel('Occurrences')
-    plt.savefig('{0}_histogram.png'.format('CONLL-NER-2002'))
-    print('FIGURE SAVED')
-
-
 if __name__ == '__main__':
-    vectorizer = Vectorizer(word_embedding_path=os.path.join(DATA_DIR, 'embeddings', 'glove.6B.50d.w2v.txt'))
-
     print('Reading training data')
-    documents = EnglishNerParser().read_file(os.path.join(DATA_DIR, 'ner', 'eng.train.txt'))[:10]
-    plot_sequence_length_distribution(documents)
+    documents = EnglishNerParser().read_file(os.path.join(DATA_DIR, 'ner', 'eng.train.txt'))
     print('Create features')
-    features = vectorizer.encode_features(documents)
+    vectorizer = Vectorizer(word_embedding_path=os.path.join(DATA_DIR, 'embeddings', 'glove.6B.50d.w2v.txt'))
+    max_length = 60
+    x_words, x_pos, x_shapes = vectorizer.encode_features(documents, max_length)
     labels = vectorizer.encode_annotations(documents)
-    print('Loaded {} data samples'.format(len(features)))
+    print('Loaded {} data samples'.format(len(x_words)))
 
     print('Padding sequences')
-    max_length = 60
-    x_train, x_validation = {}, {}
-    for key in features:
-        x_train[key] = sequence.pad_sequences(features[key][:int(len(features[key]) * 0.8)], maxlen=max_length)
-        x_validation[key] = sequence.pad_sequences(features[key][int(len(features[key]) * 0.8):], maxlen=max_length)
-
     y_train = sequence.pad_sequences([np_utils.to_categorical(y_group, num_classes=len(vectorizer.labels)) for y_group in labels[:int(len(labels) * 0.8)]], maxlen=max_length)
     y_validation = sequence.pad_sequences([np_utils.to_categorical(y_group, num_classes=len(vectorizer.labels)) for y_group in labels[int(len(labels) * 0.8):]], maxlen=max_length)
 
     print('Build neural net...')
     model = Recurrent.build_tagging('bilstm_lstm', word_embeddings=vectorizer.word_embeddings,
-                            input_shape={'pos': (len(vectorizer.pos2index), 10),
-                                         'shape': (len(vectorizer.shape2index), 2)},
-                            out_shape=len(vectorizer.labels),
-                            units=100, dropout_rate=0.5)
+                                    input_shape={'pos': (len(vectorizer.pos2index), 10),
+                                                 'shape': (len(vectorizer.shape2index), 2)},
+                                    out_shape=len(vectorizer.labels),
+                                    units=100, dropout_rate=0.5)
     print('Train neural net...')
     trained_model_name = os.path.join(DATA_DIR, 'models', 'ner_weights.h5')
     early_stopping = EarlyStopping(monitor='val_loss', patience=10)
     saveBestModel = ModelCheckpoint(trained_model_name, monitor='val_loss', verbose=1, save_best_only=True,
                                     mode='auto')
-    model.fit([x_train['words'], x_train['pos'], x_train['shape']], y_train,
-              validation_data=([x_validation['words'], x_validation['pos'], x_validation['shape']], y_validation),
+    model.fit([x_words[:int(len(x_words) * 0.8)], x_pos[:int(len(x_pos) * 0.8)], x_shapes[:int(len(x_shapes) * 0.8)]],
+              y_train,
+              validation_data=([x_words[int(len(x_words) * 0.8):], x_pos[int(len(x_pos) * 0.8):], x_shapes[int(len(x_shapes) * 0.8):]], y_validation),
               batch_size=32,  epochs=10, callbacks=[saveBestModel, early_stopping])
 
     model.load_weights(trained_model_name)
@@ -83,7 +66,7 @@ if __name__ == '__main__':
     print('================== Classification Report =======================')
     y_pred, y_dev = [], []
     for i in range(int(len(labels) * 0.8), len(labels) - 1):
-        y_p = model.predict([features['words'][i], features['pos'][i], features['shape'][i]],
+        y_p = model.predict([x_words[i], x_pos[i], x_shapes[i]],
                                     batch_size=1, verbose=0)
         y_p = NeuralNetwork.probas_to_classes(y_p)
         y_pred.extend(y_p.flatten())

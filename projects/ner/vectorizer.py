@@ -26,28 +26,30 @@ class Vectorizer:
         self.labels = ['O', 'PER', 'LOC', 'ORG', 'MISC']
         self.word_embeddings = KeyedVectors.load_word2vec_format(word_embedding_path)
 
-    def encode_features(self, documents: List[Document]):
+    def encode_features(self, documents: List[Document], max_length=100):
         """
         Creates a feature matrix for all documents in the sample list
         :param documents: list of all samples as document objects
         :return: list of numpy arrays (one item per document)
         """
-        features = {'words': [], 'pos': [], 'shape': []}
-        for i, document in tqdm(enumerate(documents)):
-            for sentence in document.get_sentence_tokens():
-                features['words'].append(np.zeros(len(sentence)))
-                features['pos'].append(np.zeros(len(sentence)))
-                features['shape'].append(np.zeros(len(sentence)))
-
-                for j, token in enumerate(sentence):
+        no_sentences = [len(document.sentences) for document in documents]
+        words, pos, shapes = np.zeros((no_sentences, max_length)), np.zeros((no_sentences, max_length)),\
+                             np.zeros((no_sentences, max_length))
+        i = 0
+        for document in tqdm(documents):
+            for sentence in document.sentences:
+                for j, token in enumerate(sentence.tokens):
+                    if j == max_length:
+                        break
                     if token.text.lower() in self.word_embeddings.index2word:
-                        features['words'][-1][j] = self.word_embeddings.index2word.index(token.text.lower())
+                        words[i][j] = self.word_embeddings.index2word.index(token.text.lower())
                     else:
-                        features['words'][-1][j] = 0
-                    features['pos'][-1][j] = self.pos2index[token.features['pos']]
-                    features['shape'][-1][j] = self.shape2index[token.features['shape']]
+                        words[i][-1][j] = 0
+                    pos[i][j] = self.pos2index[token.features['pos']]
+                    shapes[i][j] = self.shape2index[token.features['shape']]
+                i += 1
 
-        return features
+        return words, pos, shapes
 
     def encode_annotations(self, documents: List[Document]):
         """

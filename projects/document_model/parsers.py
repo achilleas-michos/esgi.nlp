@@ -20,7 +20,7 @@ class SimpleTextParser(Parser):
 
 
 class EnglishNerParser(Parser):
-    def read(self, content: str) -> Document:
+    def read(self, content: str):
         documents = []
         for text in tqdm(content.split('-DOCSTART- -X- O O')):  # Split documents
             if text == '':

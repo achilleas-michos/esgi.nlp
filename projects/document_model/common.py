@@ -1,7 +1,4 @@
 import re
-import gensim
-import time
-import pickle
 
 
 def get_shape_category(token):
