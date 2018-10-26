@@ -32,7 +32,7 @@ class Vectorizer:
         :param documents: list of all samples as document objects
         :return: list of numpy arrays (one item per document)
         """
-        no_sentences = [len(document.sentences) for document in documents]
+        no_sentences = sum([len(document.sentences) for document in documents])
         words, pos, shapes = np.zeros((no_sentences, max_length)), np.zeros((no_sentences, max_length)),\
                              np.zeros((no_sentences, max_length))
         i = 0
@@ -44,7 +44,7 @@ class Vectorizer:
                     if token.text.lower() in self.word_embeddings.index2word:
                         words[i][j] = self.word_embeddings.index2word.index(token.text.lower())
                     else:
-                        words[i][-1][j] = 0
+                        words[i][j] = 0
                     pos[i][j] = self.pos2index[token.features['pos']]
                     shapes[i][j] = self.shape2index[token.features['shape']]
                 i += 1

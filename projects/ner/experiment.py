@@ -4,8 +4,6 @@ from keras.preprocessing import sequence
 from keras.utils import np_utils
 from sklearn.metrics import classification_report
 from keras.callbacks import ModelCheckpoint, EarlyStopping
-import numpy as np
-import matplotlib.pyplot as plt
 from projects.neural_networks import NeuralNetwork, Recurrent
 from projects.document_model import EnglishNerParser
 from projects.ner import Vectorizer
@@ -13,11 +11,11 @@ from projects.ner import Vectorizer
 
 def embeddings_test(self):
     print('TOP-10 SIMILAR WORDS BASED ON A SINGLE WORD')
-    for word in ['dog','france','computer','king','batman']:
+    for word in ['dog', 'france', 'computer', 'king', 'batman']:
         print('{0} --> {1}'.format(word, ', '.join([word_sim for (word_sim, cos_sim) in self.word_embeddings.most_similar(positive=[word])])))
 
     print('TOP-10 SIMILAR WORDS BASED ON WORD PAIR')
-    for pair in [['may','could'], ['may','june'], ['duck', 'goose'], ['duck','bend','crouch']]:
+    for pair in [['may','could'], ['may', 'june'], ['duck', 'goose'], ['duck', 'bend', 'crouch']]:
         print('{0} --> {1}'.format('-'.join(pair), ', '.join([word_sim for (word_sim, cos_sim) in self.word_embeddings.most_similar(positive=pair)])))
 
     print('WHICH WORD DOES NOT MATCH IN THE GROUP?')
