@@ -26,24 +26,17 @@ class Embedding:
         return self.size
 
 
-def load_embeddings(filename: str, source: str = 'gensim', use_norm: bool = False) -> object:
+def load_embeddings(filename: str, source: str = 'gensim', binary: bool = True) -> object:
     """
     :rtype: list
     """
-    try:
-        time1 = time.time()
-        if source == 'gensim':
-            embeddings = gensim.models.KeyedVectors.load_word2vec_format(filename, binary=True)
-            if use_norm:
-                embeddings.init_sims(replace=True)
-            vocab_size = len(embeddings.index2word)
-            emb_size = embeddings.vector_size
-        elif source == 'pickle':
-            with open(filename, 'rb') as fp:
-                embeddings = pickle.load(fp)
-            vocab_size = len(embeddings)
-            emb_size = len(embeddings[list(embeddings.keys())[0]])
-    except:
-        raise Exception('Embeddings file could not be loaded')
-
+    if source == 'gensim':
+        embeddings = gensim.models.KeyedVectors.load_word2vec_format(filename, binary=binary)
+        vocab_size = len(embeddings.index2word)
+        emb_size = embeddings.vector_size
+    elif source == 'pickle':
+        with open(filename, 'rb') as fp:
+            embeddings = pickle.load(fp)
+        vocab_size = len(embeddings)
+        emb_size = len(embeddings[list(embeddings.keys())[0]])
     return Embedding(embeddings, emb_size)
