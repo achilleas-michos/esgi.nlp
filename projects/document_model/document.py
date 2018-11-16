@@ -1,5 +1,4 @@
 from typing import List
-import re
 import logging
 import nltk
 from nltk import pos_tag as nltk_pos_tagger

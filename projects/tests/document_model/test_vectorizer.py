@@ -10,6 +10,6 @@ class TestVectorizer(TestCase):
         docs = EnglishNerParser().read_file(os.path.join(DATA_DIR, 'ner', 'eng.test.txt'))
         vectorizer = Vectorizer(word_embedding_path=os.path.join(DATA_DIR, 'embeddings', 'glove.6B.50d.w2v.txt'))
 
-        feature_vectors = vectorizer.encode_features(docs)
+        words, _, _ = vectorizer.encode_features(docs)
         label_vectors = vectorizer.encode_annotations(docs)
-        self.assertEqual(len(feature_vectors), len(label_vectors), 'Error')
+        self.assertEqual(len(words), len(label_vectors), 'Error')

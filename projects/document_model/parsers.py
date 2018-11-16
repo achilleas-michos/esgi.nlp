@@ -1,3 +1,4 @@
+from typing import  List
 from .document import Document, Interval
 from nltk.tokenize import word_tokenize
 import json
@@ -8,10 +9,13 @@ class Parser(object):
     def create(self):
         return self
 
-    def read_file(self, filename: str) -> Document:
+    def read_file(self, filename: str) -> List[Document]:
         with open(filename, 'r', encoding='utf-8') as fp:
             content = fp.read()
         return self.read(content)
+
+    def read(self, content: str):
+        raise NotImplemented
 
 
 class SimpleTextParser(Parser):

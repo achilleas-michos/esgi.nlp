@@ -59,9 +59,9 @@ class Vectorizer:
         """
         annotations = []
         for i, document in tqdm(enumerate(documents)):
-            for sentence in document.get_sentence_tokens():
+            for sentence in document.sentences:
                 sentence_annotations = np.zeros((len(sentence), 1))
-                for j, token in enumerate(sentence):
+                for j, token in enumerate(sentence.tokens):
                     sentence_annotations[j] = self.label2index[token.label]
                 annotations.append(sentence_annotations)
         return annotations
